@@ -1,0 +1,25 @@
+﻿const assert = require('node:assert/strict');
+const T = require('../timer.js');
+let t = 1000000, s = T.initial();
+assert.equal(s.remaining,1500000);
+s=T.transition(s,'start',t); assert.equal(T.sync(s,t+10000).remaining,1490000);
+s=T.transition(s,'pause',t+10000); assert.equal(T.restore(s,t+900000).remaining,1490000);
+s=T.transition(s,'resume',t+900000); assert.equal(T.sync(s,t+910000).remaining,1480000);
+let restored=T.restore(s,t+920000); assert.equal(restored.remaining,1470000);
+assert.equal(T.restore(s,t+3000000).status,'completed');
+s=T.transition(s,'reset',t); assert.equal(s.status,'ready'); assert.equal(s.remaining,1500000);
+s=T.transition(s,'mode',t,'break'); assert.equal(s.duration,5);
+s=T.transition(s,'duration',t,60); assert.equal(s.remaining,3600000);
+for(const n of [0,4,6,65,NaN]) assert.equal(T.transition(s,'duration',t,n).duration,60);
+for(const v of [null,{},'bad',{...s,remaining:-1},{...s,status:'running',endAt:null},{...s,status:'completed',remaining:1}]) assert.deepEqual(T.restore(v,t),T.initial());
+const active = T.transition(T.initial(), 'start', t);
+assert.deepEqual(T.restore({...active, endAt: t + active.remaining + 1}, t), T.initial());
+assert.deepEqual(T.restore({...active, endAt: t + 86400000}, t), T.initial());
+assert.equal(T.restore(active, t).status, 'running');
+assert.equal(T.restore(active, t + 1500000).status, 'completed');
+assert.deepEqual(T.restore(active, t - 1), T.initial()); // Reloj atrasado.
+const paused = T.transition(active, 'pause', t + 1000);
+assert.equal(T.restore(paused, t + 9999999).remaining, 1499000);
+assert.equal(T.restore({...paused, endAt: t + 1}, t).status, 'ready');
+console.log('OK: coherencia de fechas, reloj atrasado y restauracion segura');
+console.log('OK: inicio, avance, pausa, reanudación, reapertura, finalización, reinicio, preferencias, límites y datos corruptos');

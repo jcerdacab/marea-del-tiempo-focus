@@ -1,0 +1,8 @@
+{
+  "manifest_version": 3,
+  "name": "Marea del tiempo — Focus",
+  "version": "1.0.0",
+  "description": "Un espacio para concentrarte y descansar con la marea del tiempo.",
+  "permissions": ["storage"],
+  "action": { "default_title": "Marea del tiempo — Focus", "default_popup": "index.html" }
+}
